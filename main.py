@@ -3,6 +3,7 @@ import asyncio
 import mercadopago # Biblioteca do MP
 import io
 import base64
+import os
 from discord.ext import commands
 from discord.ui import Button, View, Modal, TextInput 
 
@@ -278,7 +279,5 @@ async def loja(ctx):
     embed.set_footer(text="Caboom's Store")
     await ctx.send(embed=embed, view=BotaoCompra())
 
-
-import os
 
 bot.run(os.getenv("TOKEN"))
