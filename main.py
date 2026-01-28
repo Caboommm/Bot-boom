@@ -29,11 +29,15 @@ PRECO_UNITARIO = 35.00
 ESTOQUE = "Ilimitado"
 
 # 4. CARGOS (IDs)
-ID_AUTOROLE_ENTRADA = 1465012346794676249 # Ganha ao entrar
-ID_CARGO_CLIENTE = 1465920880033927308    # Ganha ao pagar
-ID_CARGO_STAFF = 1465012346794676253      # Pode usar comandos
+ID_AUTOROLE_ENTRADA = 1465012346794676249 
+ID_CARGO_CLIENTE = 1465920880033927308    
+ID_CARGO_STAFF = 1465012346794676253      
 
-# 5. IMAGENS
+# 5. LINK DO SITE (NOVO) 👇
+# Coloque aqui o seu Link de Pagamento do Mercado Pago ou o site da loja
+LINK_MERCADO_PAGO = "https://mpago.la/15Xufnx" 
+
+# 6. IMAGENS
 IMAGEM_LOJA = "https://cdn.discordapp.com/attachments/1463967623233667311/1465808392026067077/Design_sem_nome.png?ex=697a73f2&is=69792272&hm=53eec98d91136d80f668177c3c62fa63ea1891e1be99b661cc121b7da9d15961&"
 # ==============================================================================
 
@@ -110,7 +114,11 @@ class PagamentoView(discord.ui.View):
     def __init__(self, valor_total):
         super().__init__(timeout=None)
         self.valor_total = valor_total 
-    @discord.ui.button(label="Gerar PIX", style=discord.ButtonStyle.success, emoji="💠")
+        
+        # ADICIONEI O BOTÃO DO SITE AQUI 👇
+        self.add_item(discord.ui.Button(label="Outras Formas de Pagamento", style=discord.ButtonStyle.link, url=LINK_MERCADO_PAGO))
+
+    @discord.ui.button(label="Gerar PIX (Auto)", style=discord.ButtonStyle.success, emoji="💠")
     async def pagar_pix(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         user = interaction.user
@@ -128,7 +136,7 @@ class PagamentoView(discord.ui.View):
             img_bytes = base64.b64decode(qr_base64)
             arquivo_img = discord.File(io.BytesIO(img_bytes), filename="qr_pix.png")
             
-            embed_pix = discord.Embed(title="💠 QR Code Gerado!", description="Aprovação Automática.", color=0x8708f7)
+            embed_pix = discord.Embed(title="💠 QR Code Gerado!", description="Aprovação Automática pelo Bot.", color=0x8708f7)
             embed_pix.add_field(name="Valor", value=f"**R$ {self.valor_total:.2f}**", inline=False)
             embed_pix.set_image(url="attachment://qr_pix.png")
             embed_pix.set_footer(text=f"ID: {payment_id}")
@@ -136,9 +144,10 @@ class PagamentoView(discord.ui.View):
             await interaction.followup.send(embed=embed_pix, file=arquivo_img)
             await interaction.followup.send(f"**Copia e Cola:**\n```{qr_code}```", ephemeral=True)
             bot.loop.create_task(verificar_pagamento(payment_id, interaction.channel, user))
-            self.stop() 
+            self.stop() # Remove os botões para não gerar duplicado
         except Exception as e:
             await interaction.followup.send(f"❌ Erro MP: {e}", ephemeral=True)
+
     @discord.ui.button(label="Cancelar", style=discord.ButtonStyle.red, emoji="✖️")
     async def cancelar(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.channel.delete()
@@ -157,7 +166,7 @@ class CarrinhoView(discord.ui.View):
             cat = guild.get_channel(ID_CATEGORIA_ABERTOS)
             ticket = await guild.create_text_channel(f"compra-{user.name.lower()}", overwrites=overwrites, category=cat)
             bot.loop.create_task(monitorar_ticket(ticket))
-            embed_pag = discord.Embed(title="💳 Checkout", description="Clique abaixo para pagar.", color=0x8708f7)
+            embed_pag = discord.Embed(title="💳 Checkout", description="Escolha como deseja pagar:", color=0x8708f7)
             embed_pag.add_field(name="Total", value=f"**R$ {valor_final:.2f}**", inline=False)
             await ticket.send(user.mention, embed=embed_pag, view=PagamentoView(valor_final))
             await interaction.response.send_message(f"✅ Ticket: {ticket.mention}", ephemeral=True)
@@ -191,12 +200,10 @@ async def on_ready():
 
 @bot.command()
 async def anuncio(ctx):
-    # Permissão
     if not tem_permissao(ctx): return await ctx.reply("❌ Sem permissão.", delete_after=5)
 
     await ctx.message.delete()
     embed = discord.Embed(title="💣 CABOOM'S OPTIMIZATION", description="**A EXPLOSÃO DE FPS QUE TU PRECISA**", color=0x8708f7)
-    # VOLTEI COM O TEXTO ORIGINAL AQUI 👇
     texto = """
 
 Cansado de perder trocação porque o PC deu aquela engasgada na hora H? 😤
@@ -221,11 +228,9 @@ O que tu ganha:
 
 @bot.command()
 async def loja(ctx):
-    # Permissão
     if not tem_permissao(ctx): return await ctx.reply("❌ Sem permissão.", delete_after=5)
 
     await ctx.message.delete()
-    # VOLTEI COM A DESCRIÇÃO ORIGINAL AQUI 👇
     embed = discord.Embed(title=f"✨ {NOME_PRODUTO}", description="```Para comprar basta clicar no Adicionar ao Carrinho```", color=0x8708f7)
     embed.add_field(name="💰 Preço", value=f"**R$ {PRECO_UNITARIO:.2f}**", inline=True)
     if IMAGEM_LOJA.startswith("http"):
