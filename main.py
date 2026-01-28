@@ -118,7 +118,7 @@ class PagamentoView(discord.ui.View):
         # ADICIONEI O BOTÃO DO SITE AQUI 👇
         self.add_item(discord.ui.Button(label="Outras Formas de Pagamento", style=discord.ButtonStyle.link, url=LINK_MERCADO_PAGO))
 
-    @discord.ui.button(label="Gerar PIX (Auto)", style=discord.ButtonStyle.success, emoji="💠")
+    @discord.ui.button(label="Gerar PIX", style=discord.ButtonStyle.success, emoji="💠")
     async def pagar_pix(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         user = interaction.user
@@ -239,4 +239,5 @@ async def loja(ctx):
     await ctx.send(embed=embed, view=BotaoCompra())
 
 bot.run(os.getenv("TOKEN"))
+
 
