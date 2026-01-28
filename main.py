@@ -23,7 +23,7 @@ ID_CATEGORIA_PAGOS = 1465840575029706793
 
 # 3. DADOS DO PRODUTO
 NOME_PRODUTO = "Otimização Básica"
-PRECO_UNITARIO = 0.05
+PRECO_UNITARIO = 35.00
 ESTOQUE = "Ilimitado"
 
 # 4. IMAGENS E LINKS
@@ -281,3 +281,4 @@ async def loja(ctx):
 
 
 bot.run(os.getenv("TOKEN"))
+
