@@ -1,4 +1,5 @@
 import discord
+import random
 import asyncio 
 from discord.ext import commands
 from discord.ui import Button, View, Modal, TextInput # Importando o Modal
