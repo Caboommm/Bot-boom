@@ -10,7 +10,7 @@ from discord.ui import Button, View, Modal, TextInput
 # --- CONFIGURAÇÕES DO BOT ---
 intents = discord.Intents.default()
 intents.message_content = True
-intents.members = True # OBRIGATÓRIO PARA DAR CARGOS
+intents.members = True 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # ==============================================================================
@@ -28,12 +28,10 @@ NOME_PRODUTO = "Otimização Básica"
 PRECO_UNITARIO = 35.00
 ESTOQUE = "Ilimitado"
 
-# 4. CARGOS (IDs) - ATENÇÃO AQUI 👇
-# ID do cargo que a pessoa ganha quando ENTRA no servidor
-ID_AUTOROLE_ENTRADA = 1465012346794676249
-
-# ID do cargo que a pessoa ganha quando COMPRA (Paga o Pix)
-ID_CARGO_CLIENTE = 1465920880033927308 # <--- TROQUE PELO ID DO CARGO "CLIENTE"
+# 4. CARGOS E PERMISSÕES (IDs) - CONFIGURA AQUI 👇
+ID_AUTOROLE_ENTRADA = 1465012346794676249 # Cargo que ganha ao ENTRAR
+ID_CARGO_CLIENTE = 1465920880033927308   # Cargo que ganha ao PAGAR
+ID_CARGO_STAFF = 1465012346794676253      # Cargo que pode usar !loja e !anuncio (Admin)
 
 # 5. IMAGENS
 IMAGEM_LOJA = "https://cdn.discordapp.com/attachments/1463967623233667311/1465808392026067077/Design_sem_nome.png?ex=697a73f2&is=69792272&hm=53eec98d91136d80f668177c3c62fa63ea1891e1be99b661cc121b7da9d15961&"
@@ -41,6 +39,12 @@ IMAGEM_LOJA = "https://cdn.discordapp.com/attachments/1463967623233667311/146580
 
 # Inicializa o SDK
 sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
+
+# --- FUNÇÃO DE PERMISSÃO (O Porteiro) ---
+def tem_permissao(ctx):
+    # Se o cara for o dono do servidor ou tiver o cargo de Staff, libera
+    return ctx.author.id == ctx.guild.owner_id or \
+           any(role.id == ID_CARGO_STAFF for role in ctx.author.roles)
 
 # --- FUNÇÃO DO TIMER ---
 async def monitorar_ticket(channel):
@@ -54,7 +58,7 @@ async def monitorar_ticket(channel):
     except:
         pass 
 
-# --- FUNÇÃO QUE VERIFICA O PAGAMENTO E DÁ O CARGO ---
+# --- FUNÇÃO QUE VERIFICA O PAGAMENTO ---
 async def verificar_pagamento(payment_id, channel, user):
     tentativas = 0
     while tentativas < 120:
@@ -63,9 +67,6 @@ async def verificar_pagamento(payment_id, channel, user):
             status = payment_info["response"]["status"]
             
             if status == "approved":
-                # === PAGAMENTO APROVADO! ===
-                
-                # 1. Muda o nome e a categoria
                 novo_nome = f"✅-aprovado-{user.name.lower()}"
                 categoria_pagos = channel.guild.get_channel(ID_CATEGORIA_PAGOS)
                 
@@ -74,29 +75,25 @@ async def verificar_pagamento(payment_id, channel, user):
                 else:
                     await channel.edit(name=novo_nome)
 
-                # 2. DÁ O CARGO DE CLIENTE (NOVO CÓDIGO AQUI 👇)
+                # DÁ O CARGO DE CLIENTE
                 guild = channel.guild
                 role_cliente = guild.get_role(ID_CARGO_CLIENTE)
+                msg_cargo = ""
                 if role_cliente:
                     try:
                         await user.add_roles(role_cliente)
-                        msg_cargo = f"✅ Cargo {role_cliente.mention} adicionado!"
+                        msg_cargo = f"\n✅ Cargo {role_cliente.mention} entregue!"
                     except:
-                        msg_cargo = "⚠️ Não consegui dar o cargo (verifique minhas permissões)."
-                else:
-                    msg_cargo = "⚠️ ID do cargo de cliente não encontrado."
+                        msg_cargo = "\n⚠️ Erro ao entregar cargo (verifique permissões)."
 
-                # 3. Manda o embed de sucesso
                 embed_sucesso = discord.Embed(
                     title="🎉 PAGAMENTO APROVADO!",
-                    description="O sistema confirmou seu PIX automaticamente!",
+                    description=f"PIX confirmado!{msg_cargo}",
                     color=0x8708f7
                 )
-                embed_sucesso.add_field(name="Status", value="✅ Confirmado", inline=True)
-                embed_sucesso.add_field(name="Entrega", value=msg_cargo, inline=False)
                 embed_sucesso.set_footer(text="Aguarde um admin para realizar o serviço.")
                 
-                await channel.send(f"{user.mention} || <@&1465012346794676253> || **PAGAMENTO CONFIRMADO!**", embed=embed_sucesso)
+                await channel.send(f"{user.mention} || <@&{ID_CARGO_STAFF}> || **PAGAMENTO CONFIRMADO!**", embed=embed_sucesso)
                 return 
             
             elif status == "cancelled" or status == "rejected":
@@ -109,7 +106,7 @@ async def verificar_pagamento(payment_id, channel, user):
         await asyncio.sleep(5)
         tentativas += 1
 
-# --- RESTO DO CÓDIGO (Igual) ---
+# --- RESTO DAS CLASSES (Modal, Views) - MANTIVE IGUAL ---
 class QuantidadeModal(discord.ui.Modal, title="Alterar Quantidade"):
     quantidade = discord.ui.TextInput(label="Quantas otimizações?", placeholder="Ex: 2", min_length=1, max_length=2, required=True)
     async def on_submit(self, interaction: discord.Interaction):
@@ -194,7 +191,7 @@ class BotaoCompra(discord.ui.View):
         embed.add_field(name="Total", value=f"**R$ {PRECO_UNITARIO:.2f}**", inline=False)
         await interaction.response.send_message(embed=embed, view=CarrinhoView(), ephemeral=True)
 
-# --- EVENTO DE AUTO-ROLE (ENTROU NO SERVIDOR) ---
+# --- EVENTOS E COMANDOS ---
 @bot.event
 async def on_member_join(member):
     role = member.guild.get_role(ID_AUTOROLE_ENTRADA)
@@ -206,16 +203,30 @@ async def on_member_join(member):
 async def on_ready():
     print(f'🔥 {bot.user} tá ON! lucas cala a boca')
 
+# === COMANDOS BLOQUEADOS PRA STAFF ===
+
 @bot.command()
 async def anuncio(ctx):
+    # Verifica se tem permissão
+    if not tem_permissao(ctx):
+        return await ctx.reply("❌ **Sem permissão, menor!** Só Staff pode usar isso.", delete_after=5)
+
     await ctx.message.delete()
     embed = discord.Embed(title="💣 CABOOM'S OPTIMIZATION", description="**A EXPLOSÃO DE FPS QUE TU PRECISA**", color=0x8708f7)
-    embed.add_field(name="⠀", value="Cansado de PC lento? Vem com a Caboom!\n👇 Compre abaixo!", inline=False)
+    texto = """
+Cansado de PC lento? Vem com a Caboom!
+👇 Compre abaixo!
+    """
+    embed.add_field(name="⠀", value=texto, inline=False)
     embed.set_image(url="https://cdn.discordapp.com/attachments/1465821639647166665/1465821796266676316/Logo_otimi.jpg?ex=697a806d&is=69792eed&hm=085fd68d744f54e7d060ff7dd1302dc0e2f798a5ccef824ba73c57861683000b&")
     await ctx.send(embed=embed)
 
 @bot.command()
 async def loja(ctx):
+    # Verifica se tem permissão
+    if not tem_permissao(ctx):
+        return await ctx.reply("❌ **Sem permissão, menor!** Só Staff pode usar isso.", delete_after=5)
+
     await ctx.message.delete()
     embed = discord.Embed(title=f"✨ {NOME_PRODUTO}", description="```Clique no botão para comprar```", color=0x8708f7)
     embed.add_field(name="💰 Preço", value=f"**R$ {PRECO_UNITARIO:.2f}**", inline=True)
