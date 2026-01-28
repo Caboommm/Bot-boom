@@ -29,8 +29,8 @@ PRECO_UNITARIO = 35.00
 ESTOQUE = "Ilimitado"
 
 # 4. CARGOS (IDs)
-ID_AUTOROLE_ENTRADA = 1465012346794676253 # Ganha ao entrar
-ID_CARGO_CLIENTE = 1465012346794676253    # Ganha ao pagar
+ID_AUTOROLE_ENTRADA = 1465012346794676249 # Ganha ao entrar
+ID_CARGO_CLIENTE = 1465920880033927308    # Ganha ao pagar
 ID_CARGO_STAFF = 1465012346794676253      # Pode usar comandos
 
 # 5. IMAGENS
@@ -226,7 +226,7 @@ async def loja(ctx):
 
     await ctx.message.delete()
     # VOLTEI COM A DESCRIÇÃO ORIGINAL AQUI 👇
-    embed = discord.Embed(title=f"✨ {NOME_PRODUTO}", description="```Para comprar basta clicar no botão abaixo...```", color=0x8708f7)
+    embed = discord.Embed(title=f"✨ {NOME_PRODUTO}", description="```Para comprar basta clicar no Adicionar ao Carrinho```", color=0x8708f7)
     embed.add_field(name="💰 Preço", value=f"**R$ {PRECO_UNITARIO:.2f}**", inline=True)
     if IMAGEM_LOJA.startswith("http"):
         embed.set_image(url=IMAGEM_LOJA)
@@ -234,3 +234,4 @@ async def loja(ctx):
     await ctx.send(embed=embed, view=BotaoCompra())
 
 bot.run(os.getenv("TOKEN"))
+
