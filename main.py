@@ -257,7 +257,7 @@ O que tu ganha:
 ✅ Windows Otimizado
 ✅ PC Formatado
 
-👇 Brota aqui no <#1465012347386069031> e faça seu pedido!
+👇 Dê uma olhada nos <#1465012347386069026> antes de efetuar a compra!
     """
     embed.add_field(name="⠀", value=texto, inline=False)
     embed.set_image(url="https://cdn.discordapp.com/attachments/1465821639647166665/1465821796266676316/Logo_otimi.jpg?ex=697a806d&is=69792eed&hm=085fd68d744f54e7d060ff7dd1302dc0e2f798a5ccef824ba73c57861683000b&")
@@ -277,6 +277,7 @@ async def loja(ctx):
     await ctx.send(embed=embed, view=BotaoCompra())
 
 bot.run(os.getenv("TOKEN"))
+
 
 
 
