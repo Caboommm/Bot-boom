@@ -199,6 +199,44 @@ async def on_ready():
 # === COMANDOS ===
 
 @bot.command()
+async def regras(ctx):
+    # Verifica Permissão
+    if not tem_permissao(ctx): return await ctx.reply("❌ Sem permissão.", delete_after=5)
+
+    await ctx.message.delete()
+    
+    embed = discord.Embed(title="📜 DIRETRIZES & TERMOS DE SERVIÇO", color=0x8708f7)
+    embed.description = "**Seja bem-vindo(a)!** Ao permanecer no servidor, você concorda com os pontos abaixo:"
+
+    # Campo 1: Convivência
+    regras_chat = """
+    • **Respeito Mútuo:** Evite discussões calorosas. Mantenha o ambiente harmônico.
+    • **Tolerância Zero:** Racismo, homofobia, nazismo ou qualquer discurso de ódio = **BAN**.
+    • **Proibido:** Flood, Spam, "Copy-Paste" e Divulgação não autorizada (DM ou Chat).
+    • **Conteúdo:** Proibido NSFW, Gore ou arquivos maliciosos/scripts.
+    • **Voz:** Sem gritos, toxidade ou ficar entrando e saindo de salas (Channel Hopping).
+    """
+    embed.add_field(name="👮 REGULAMENTO DA COMUNIDADE", value=regras_chat, inline=False)
+
+    # Campo 2: Termos de Serviço
+    termos_servico = """
+    **4.1. Natureza do Serviço**
+    • Métodos 100% via software e sistema (sem risco físico).
+    • Foco em redução de Input Lag e estabilidade de FPS.
+
+    **4.2. Limitações de Hardware**
+    • **Não nos responsabilizamos** por defeitos de hardware (peças) pré-existentes.
+    • A otimização não transforma PC fraco em PC da NASA. O resultado depende da sua máquina.
+
+    **4.3. Política de Reembolso**
+    • Por ser um produto digital consumível, **não realizamos reembolsos** após a execução/entrega.
+    """
+    embed.add_field(name="⚖️ TERMOS DE SERVIÇO & ISENÇÃO", value=termos_servico, inline=False)
+    
+    embed.set_footer(text="Equipe Caboom's Optimization • As regras podem mudar sem aviso prévio.")
+    await ctx.send(embed=embed)
+
+@bot.command()
 async def anuncio(ctx):
     if not tem_permissao(ctx): return await ctx.reply("❌ Sem permissão.", delete_after=5)
 
@@ -239,5 +277,6 @@ async def loja(ctx):
     await ctx.send(embed=embed, view=BotaoCompra())
 
 bot.run(os.getenv("TOKEN"))
+
 
 
