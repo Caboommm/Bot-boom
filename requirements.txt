@@ -1,5 +1,3 @@
 discord.py
 mercadopago
 python-dotenv
-flask
-gunicorn
